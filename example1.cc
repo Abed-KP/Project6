@@ -6,7 +6,6 @@
  * 1.0
  * 2020, All Rights Reserved
  * 
- * 
  * main file for matrix size
  * 
  */ 
@@ -17,6 +16,7 @@
 #include <string>
 #include <sstream>
 #include "cdk.h"
+#include "binaryClass.h"
 
 
 #define MATRIX_WIDTH 5
@@ -24,36 +24,17 @@
 #define BOX_WIDTH 20
 #define MATRIX_NAME_STRING "Binary File Contents"
 
-const int maxRecordStringLength = 25;
-
-class BinaryFileHeader
-{
-public:
-
-  uint32_t magicNumber;
-  uint32_t versionNumber;
-  uint64_t numRecords;
-
-};
-
-class BinaryFileRecord
-{
-public:
-
-  uint8_t strLength;
-  char stringBuffer[maxRecordStringLength];
-};
-
 using namespace std;
 
 int main()
 {
 
-  WINDOW          *window;
-  CDKSCREEN	  *cdkscreen;
-  CDKMATRIX       *myMatrix;           // CDK Screen Matrix
+  WINDOW      *window;
+  CDKSCREEN   *cdkscreen;
+  CDKMATRIX   *myMatrix;           // CDK Screen Matrix
 
-  BinaryFileHeader* binaryHeader = new BinaryFileHeader ();
+BinaryFileHeader* binaryHeader = new BinaryFileHeader ();
+BinaryFileRecord* binaryRecord = new BinaryFileRecord (); 
 
   const char 		*rowTitles[MATRIX_HEIGHT+1] = {"0", "a", "b", "c"};
   const char 		*columnTitles[MATRIX_WIDTH+1] = {"0", "a", "b", "c","d","e"};
@@ -80,35 +61,45 @@ int main()
  ifstream binaryOpen("/scratch/perkins/cs3377.bin", ios::in | ios::binary);
  if (binaryOpen.is_open())
 {
-
- binaryOpen.read ((char *) binaryHeader, sizeof (BinaryFileHeader));
+{
+   binaryOpen.read ((char *) binaryHeader, sizeof (BinaryFileHeader));
    
-  stringstream col1;
-  string col1s;
-  col1 << hex << binaryHeader->magicNumber;
-  col1s += col1.str ();
+  
+  binMatrix(myMatrix,binaryHeader,binaryOpen);
+  
+  int i = 2;
+   
+  while (binaryOpen.read ((char *) binaryRecord, sizeof (BinaryFileRecord))
+	 && i <= 5)
+    {
+      stringstream ss;
+      string s; 
+      stringstream col1;
+      string col1s;
+      
+      ss << (int)binaryRecord->strLength;
+      s += ss.str ();
+      
+      col1 << binaryRecord->stringBuffer;
+      col1s += col1.str ();
 
-  stringstream col2;
-  string col2s;
-  col2 << binaryHeader->versionNumber;
-  col2s += col2.str();
 
-  stringstream col3;
-  string col3s;
-  col3 << binaryHeader->numRecords;
-  col3s += col3.str();
+      setCDKMatrixCell (myMatrix, i, 1, ("strlen: " + s).c_str ());
+      setCDKMatrixCell (myMatrix, i, 2, col1s.c_str ());
+      i++;
+    }
 
-  setCDKMatrixCell (myMatrix, 1, 1, ("Magic:0x" + col1s).c_str ()); 
-  setCDKMatrixCell (myMatrix, 1, 2, ("Version: " +col2s).c_str ());
-  setCDKMatrixCell (myMatrix, 1, 3, ("NumRecords: " + col3s).c_str ());
+}
+  
 
-  drawCDKMatrix (myMatrix, true);
  }
-   
-  drawCDKMatrix (myMatrix, true);
 
+  drawCDKMatrix (myMatrix, true);
   unsigned char x;
   cin >> x;
   binaryOpen.close ();
   endCDK ();
 }
+
+
+

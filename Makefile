@@ -6,7 +6,7 @@
  #  1.0
  #  2020, All Rights Reserved
  # 
- #  Makefile with cdk path and backup
+ #  Makefile. perkins path/backup
  # 
 
 CXX = g++
